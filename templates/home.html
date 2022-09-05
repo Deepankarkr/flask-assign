@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>Employee</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=2">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+</head>
+<div class="container-fluid bg-3 text-center">
+    <nav class="navbar navbar-light" style="background-color: #a3b3b8;">
+        <a class="navbar navbar-light"><h4>EMPLOYEES</h4></a>
+        <a href="/add" class="btn btn-secondary btn-lg active" role="button" aria-pressed="true">ADD</a>
+    </nav>
+
+    <table class="table table-sm">
+        <thead class="thead-dark">
+        <tr>
+            <th scope="col">First Name</th>
+            <th scope="col">Last Name</th>
+            <th scope="col">Employee Email.ID</th>
+            <th scope="col">Edit</th>
+            <th scope="col">Delete</th>
+        </tr>
+        </thead>
+        <tbody id="maintable">
+        {% for i in emps %}
+        <tr class="table-success">
+            <td><h6>{{i.first_name}}</h6></td>
+            <td>{{i.last_name}}</td>
+            <td>{{i.email}}</td>
+            <td>
+                <a href="/edit/{{i.id}}" class="btn btn-info" role="button">Edit</a>
+            </td>
+            <td>
+                <a href="/delete/{{i.id}}" class="btn btn-info" role="button">Delete</a>
+            </td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+
+</div>
+<br><br>
+<style>
+    body {
+      background-color: #faf5eb;
+    }
+
+</style>
+</html>

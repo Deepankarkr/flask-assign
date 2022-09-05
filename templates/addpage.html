@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>Add Emp</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=2">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+</head>
+<div class="container-fluid bg-3 text-center">
+    <nav class="navbar navbar-light" style="background-color: #a3b3b8;">
+        <a class="navbar navbar-light"><h4>EMPLOYEES</h4></a>
+    </nav>
+    <div class="row">
+        <div class="col-sm-4"></div>
+        <div class="col-sm-4">
+            <div class="form-group">
+                <h6><span class="badge badge-secondary">New Employee</span></h6>
+                <form name="myForm" onsubmit="return validateForm()" action="/" method="POST">
+                    <br>
+                    <input class="form-control" type="text" id="firstname" placeholder="First Name"
+                           name="firstname">
+                    <br>
+                    <input class="form-control" type="text" id="lastname" placeholder="Last Name"
+                           name="lastname">
+                    <br>
+                    <input class="form-control" type="text" id="email" placeholder="Email ID"
+                           name="email">
+                    <br>
+                    <button type="submit" class="btn btn-primary btn-lg"> Submit</button>
+                </form>
+            </div>
+        </div>
+        <br>
+    </div>
+</div>
+<div class="col-sm-4"></div>
+</div>
+
+</div>
+<br><br>
+<style>
+    body {
+      background-color: #faf5eb;
+    }
+</style>
+
+    <script>
+        function validateForm() {
+            var x = document.forms["myForm"]["firstname"].value;
+            var y = document.forms["myForm"]["lastname"].value;
+            var z = document.forms["myForm"]["email"].value;
+            if (x == "") {
+                alert("Name must be filled out");
+                return false;
+            }
+            if (z == "") {
+                alert("email must be filled");
+                return false;
+            }
+        }
+
+    </script>
+</html>
