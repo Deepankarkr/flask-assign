@@ -30,7 +30,7 @@ email_regex = config.get('constants', 'email_regex')
 
 
 
-class employees(db.Model):
+class Employees(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     first_name = db.Column(db.String(200), nullable=False)
     last_name = db.Column(db.String(200), nullable=False)
@@ -46,7 +46,7 @@ class employees(db.Model):
 def home_page():
     if request.method == 'GET':
         import json
-        emps = employees.query.all()
+        emps = Employees.query.all()
         # In case you want the response in JSON
         # cols = ['id','first_name', 'last_name', 'email']
         # result = [{col: getattr(d, col) for col in cols} for d in emps]
@@ -67,7 +67,7 @@ def add_employee_page():
         if re.fullmatch(email_regex, a_email):
             tz = pytz.timezone('Asia/Kolkata')
             a_datecreated = datetime.datetime.now().astimezone(tz)
-            new_emp = employees(first_name=a_first_name, last_name=a_last_name, email=a_email,
+            new_emp = Employees(first_name=a_first_name, last_name=a_last_name, email=a_email,
                                 datecreated=a_datecreated)
             try:
                 db.session.add(new_emp)
@@ -86,7 +86,7 @@ def add_employee_page():
 @app.route('/delete_employee/<int:id>')
 @auth.login_required
 def delete_employee_page(id: int):
-    emp_to_delete = employees.query.get_or_404(id)
+    emp_to_delete = Employees.query.get_or_404(id)
     try:
         db.session.delete(emp_to_delete)
         db.session.flush()
@@ -112,7 +112,7 @@ def edit_employee_page(id: int):
 
             if re.fullmatch(email_regex, a_email):
                 tz = pytz.timezone('Asia/Kolkata')
-                employees.query.filter_by(id=id).update(
+                Employees.query.filter_by(id=id).update(
                     dict(first_name=a_first_name, last_name=a_last_name, email=a_email))
                 try:
                     db.session.flush()
@@ -135,7 +135,7 @@ def edit_employee_page(id: int):
             }
     elif request.method == 'GET':
         try:
-            emp_edit = employees.query.filter_by(id=id).first()
+            emp_edit = Employees.query.filter_by(id=id).first()
             return render_template("editPage.html", emp=emp_edit)
         except Exception as e:
             return {
