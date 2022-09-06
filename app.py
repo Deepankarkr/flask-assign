@@ -64,19 +64,19 @@ def add_employee_page():
     if request.method == 'GET':
         return render_template("addpage.html")
     elif request.method == 'POST':
-        a_first_name = request.form['firstname']
-        a_last_name = request.form['lastname']
-        a_email = request.form['email']
+        first_name_req = request.form['firstname']
+        last_name_req = request.form['lastname']
+        email_req = request.form['email']
 
-        if re.fullmatch(email_regex, a_email):
+        if re.fullmatch(email_regex, email_req):
             tz = pytz.timezone('Asia/Kolkata')
             a_datecreated = datetime.datetime.now().astimezone(tz)
-            new_emp = Employees(first_name=a_first_name, last_name=a_last_name, email=a_email,
+            new_emp = Employees(first_name=first_name_req, last_name=last_name_req, email=email_req,
                                 datecreated=a_datecreated)
             try:
                 db.session.add(new_emp)
                 db.session.flush()
-                logger.info(f'{a_email} user added')
+                logger.info(f'{email_req} user added')
                 return redirect('/')
             except Exception as exception_msg:
                 db.session.rollback()
@@ -110,17 +110,17 @@ def delete_employee_page(id: int):
 def edit_employee_page(id: int):
     if request.method == 'POST':
         try:
-            a_first_name = request.form['firstname']
-            a_last_name = request.form['lastname']
-            a_email = request.form['email']
+            first_name_req = request.form['firstname']
+            last_name_req = request.form['lastname']
+            email_req = request.form['email']
 
-            if re.fullmatch(email_regex, a_email):
+            if re.fullmatch(email_regex, email_req):
                 tz = pytz.timezone('Asia/Kolkata')
                 Employees.query.filter_by(id=id).update(
-                    dict(first_name=a_first_name, last_name=a_last_name, email=a_email))
+                    dict(first_name=first_name_req, last_name=last_name_req, email=email_req))
                 try:
                     db.session.flush()
-                    logger.info(f'Edited employee :" {str(a_email)}')
+                    logger.info(f'Edited employee :" {str(email_req)}')
                     return redirect('/')
                 except Exception as exception_msg:
                     db.session.rollback()
