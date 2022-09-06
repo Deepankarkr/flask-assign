@@ -1,6 +1,8 @@
-from flask_httpauth import HTTPBasicAuth
 import configparser
 import json
+
+from flask_httpauth import HTTPBasicAuth
+
 config = configparser.ConfigParser()
 config.read('config.ini')
 

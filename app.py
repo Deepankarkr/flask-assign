@@ -8,7 +8,7 @@ import datetime
 import pytz
 import re
 
-from flask import Flask, render_template, request, redirect, jsonify
+from flask import Flask, render_template, request, redirect
 from flask_sqlalchemy import SQLAlchemy
 
 import configparser
@@ -50,7 +50,6 @@ def index():
 @auth.login_required
 def home_page():
     if request.method == 'GET':
-        import json
         emps = Employees.query.all()
         # In case you want the response in JSON
         # cols = ['id','first_name', 'last_name', 'email']
