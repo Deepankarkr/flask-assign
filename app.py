@@ -11,15 +11,18 @@ import logging
 from flask import Flask, render_template, request, redirect
 from flask_sqlalchemy import SQLAlchemy
 from logging.handlers import RotatingFileHandler
+import configparser
 
 secret_key = b'gslabflaskAssign@123'
 from auth import auth
+config = configparser.ConfigParser()
+config.read('config.ini')
 
-app = Flask(__name__, template_folder='./templates')
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///test.db'
+app = Flask(__name__, template_folder=config.get('constants', 'template_folder'))
+app.config['SQLALCHEMY_DATABASE_URI'] = config.get('constants', 'db_url')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = True
 db = SQLAlchemy(app)
-email_regex = r"^\S+@\S+\.\S+$"
+email_regex = config.get('constants', 'email_regex')
 log_files = r'./logs/' + str(
     datetime.datetime.now().strftime("%d-%b-%Y %H-%M-%S")) + ".log"
 logger = logging.getLogger()
@@ -135,11 +138,11 @@ def edit_func(id):
 
 
 if __name__ == '__main__':
-    logformat = "%(asctime)s %(levelname)s %(module)s - %(funcName)s: %(message)s"
+    logformat = config.get('constants', 'log_format', raw=True)
     datefmt = "%m-%d-%Y %H:%M"
     logging.basicConfig(filename=log_files, level=logging.DEBUG, filemode="w", format=logformat, datefmt=datefmt)
     handler = logging.StreamHandler(sys.stdout)
-    handler = RotatingFileHandler(log_files, mode='a', maxBytes=8 * 1024, backupCount=1, encoding=None, delay=0)
+    handler = RotatingFileHandler(log_files, mode='a', maxBytes=8 * 1024, encoding=None, delay=0)
     handler.setLevel(logging.INFO)
     logger.addHandler(handler)
     logger.info('Flask App Started')
