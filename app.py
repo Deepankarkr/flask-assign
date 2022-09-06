@@ -15,16 +15,21 @@ import configparser
 
 secret_key = b'gslabflaskAssign@123'
 from auth import auth
+
 config = configparser.ConfigParser()
 config.read('config.ini')
 
 app = Flask(__name__, template_folder=config.get('constants', 'template_folder'))
 app.config['SQLALCHEMY_DATABASE_URI'] = config.get('constants', 'db_url')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = True
+
 db = SQLAlchemy(app)
+
 email_regex = config.get('constants', 'email_regex')
-log_files = r'./logs/' + str(
+
+log_files = config.get('constants', 'log_file_location') + str(
     datetime.datetime.now().strftime("%d-%b-%Y %H-%M-%S")) + ".log"
+
 logger = logging.getLogger()
 
 
@@ -39,14 +44,23 @@ class employees(db.Model):
         return '<emp %r>' % self.id
 
 
-@app.route('/', methods=['POST', 'GET'])
+@app.route('/', methods=['GET'])
 @auth.login_required
-def index():
-    if request.method == 'POST':
+def home_page():
+    if request.method == 'GET':
+        emps = employees.query.all()
+        return render_template("home.html", emps=emps)
+
+
+@app.route('/add_employee',  methods=['POST', 'GET'])
+@auth.login_required
+def add_employee_page():
+    if request.method == 'GET':
+        return render_template("addpage.html")
+    elif request.method == 'POST':
         a_first_name = request.form['firstname']
         a_last_name = request.form['lastname']
         a_email = request.form['email']
-
 
         if re.fullmatch(email_regex, a_email):
             tz = pytz.timezone('Asia/Kolkata')
@@ -70,20 +84,11 @@ def index():
                     return ' There was an Error while editing'
             finally:
                 db.session.commit()
-    else:
-        emps = employees.query.all()
-        return render_template("home.html", emps=emps)
 
 
-@app.route('/add', methods=['GET'])
+@app.route('/delete_employee/<int:id>')
 @auth.login_required
-def add_page():
-    return render_template("addpage.html")
-
-
-@app.route('/delete/<int:id>')
-@auth.login_required
-def delete(id):
+def delete_employee_page(id):
     emp_to_delete = employees.query.get_or_404(id)
     try:
         db.session.delete(emp_to_delete)
@@ -98,52 +103,62 @@ def delete(id):
         db.session.commit()
 
 
-@app.route('/edit/<int:id>', methods=['POST', 'GET'])
+@app.route('/edit_employee/<int:id>', methods=['POST', 'GET'])
 @auth.login_required
-def edit_func(id):
+def edit_employee_page(id):
     if request.method == 'POST':
-        a_first_name = request.form['firstname']
-        a_last_name = request.form['lastname']
-        a_email = request.form['email']
+        try:
+            a_first_name = request.form['firstname']
+            a_last_name = request.form['lastname']
+            a_email = request.form['email']
 
-        if re.fullmatch(email_regex, a_email):
-            tz = pytz.timezone('Asia/Kolkata')
-            employees.query.filter_by(id=id).update(
-                dict(first_name=a_first_name, last_name=a_last_name, email=a_email))
-            try:
-                db.session.flush()
-                logger.info(f'Edited employee :" {str(a_email)}')
-                return redirect('/')
-            except Exception as e:
-                db.session.rollback()
-                if('sqlite3.IntegrityError' in str(e)):
-                    logger.info(f'Exception : "Duplicate issue editing employee :"{str(e)}')
-                    return {
-                        "DuplicateEmailError": "Employee Already Exist",
-                    }
-                else:
-                    logger.info(f'Exception : "Some issue editing employee :"{str(e)}')
-                    return ' There was an Error while editing'
-
-            finally:
-                db.session.commit()
-
-        else:
+            if re.fullmatch(email_regex, a_email):
+                tz = pytz.timezone('Asia/Kolkata')
+                employees.query.filter_by(id=id).update(
+                    dict(first_name=a_first_name, last_name=a_last_name, email=a_email))
+                try:
+                    db.session.flush()
+                    logger.info(f'Edited employee :" {str(a_email)}')
+                    return redirect('/')
+                except Exception as e:
+                    db.session.rollback()
+                    if ('sqlite3.IntegrityError' in str(e)):
+                        logger.info(f'Exception : "Duplicate issue editing employee :"{str(e)}')
+                        return {
+                            "DuplicateEmailError": "Employee Already Exist",
+                        }
+                    else:
+                        logger.info(f'Exception : "Some issue editing employee :"{str(e)}')
+                        return ' There was an Error while editing'
+                finally:
+                    db.session.commit()
+            else:
+                return {
+                    "EmailValidationError": "Please Provide a Valid Email Address",
+                }
+        except Exception as e:
             return {
-                "EmailValidationError": "Please Provide a Valid Email Address",
+                "Error": "Issue Processing Editing",
             }
     elif request.method == 'GET':
-        emp_edit = employees.query.filter_by(id=id).first()
-        return render_template("editPage.html", emp=emp_edit)
-
+        try:
+            emp_edit = employees.query.filter_by(id=id).first()
+            return render_template("editPage.html", emp=emp_edit)
+        except Exception as e:
+            return {
+                "Error": "Issue fetching information for Exisiting Employee",
+            }
 
 if __name__ == '__main__':
-    logformat = config.get('constants', 'log_format', raw=True)
-    datefmt = "%m-%d-%Y %H:%M"
-    logging.basicConfig(filename=log_files, level=logging.DEBUG, filemode="w", format=logformat, datefmt=datefmt)
-    handler = logging.StreamHandler(sys.stdout)
-    handler = RotatingFileHandler(log_files, mode='a', maxBytes=8 * 1024, encoding=None, delay=0)
-    handler.setLevel(logging.INFO)
-    logger.addHandler(handler)
-    logger.info('Flask App Started')
-    app.run(host='127.0.0.1', port='3000', debug=False)
+    try:
+        logformat = config.get('constants', 'log_format', raw=True)
+        datefmt = "%m-%d-%Y %H:%M"
+        logging.basicConfig(filename=log_files, level=logging.DEBUG, filemode="w", format=logformat, datefmt=datefmt)
+        handler = logging.StreamHandler(sys.stdout)
+        handler = RotatingFileHandler(log_files, mode='a', maxBytes=8 * 1024, encoding=None, delay=0)
+        handler.setLevel(logging.INFO)
+        logger.addHandler(handler)
+        app.run(host='127.0.0.1', port='3000', debug=False)
+        logger.info('Flask App Started')
+    except Exception as e:
+        logger.info('Issue starting the Flask Application')
