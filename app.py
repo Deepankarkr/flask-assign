@@ -8,7 +8,7 @@ import datetime
 import pytz
 import re
 
-from flask import Flask, render_template, request, redirect ,jsonify
+from flask import Flask, render_template, request, redirect, jsonify
 from flask_sqlalchemy import SQLAlchemy
 
 import configparser
@@ -29,7 +29,6 @@ db = SQLAlchemy(app)
 email_regex = config.get('constants', 'email_regex')
 
 
-
 class Employees(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     first_name = db.Column(db.String(200), nullable=False)
@@ -43,6 +42,12 @@ class Employees(db.Model):
 
 @app.route('/', methods=['GET'])
 @auth.login_required
+def index():
+    return redirect("/employee", code=302)
+
+
+@app.route('/employee', methods=['GET'])
+@auth.login_required
 def home_page():
     if request.method == 'GET':
         import json
@@ -54,7 +59,7 @@ def home_page():
         return render_template("home.html", emps=emps)
 
 
-@app.route('/add_employee', methods=['POST', 'GET'])
+@app.route('/employee/add_employee', methods=['POST', 'GET'])
 @auth.login_required
 def add_employee_page():
     if request.method == 'GET':
@@ -83,7 +88,7 @@ def add_employee_page():
                 db.engine.dispose()
 
 
-@app.route('/delete_employee/<int:id>')
+@app.route('/employee/delete_employee/<int:id>')
 @auth.login_required
 def delete_employee_page(id: int):
     emp_to_delete = Employees.query.get_or_404(id)
@@ -101,7 +106,7 @@ def delete_employee_page(id: int):
         db.engine.dispose()
 
 
-@app.route('/edit_employee/<int:id>', methods=['POST', 'GET'])
+@app.route('/employee/edit_employee/<int:id>', methods=['POST', 'GET'])
 @auth.login_required
 def edit_employee_page(id: int):
     if request.method == 'POST':
@@ -156,23 +161,10 @@ def duplicate_email_exception(exception: str):
     except Exception as e:
         logger.info(f'Exception : "Some issue editing employee :"{str(e)}')
 
-def duplicate_email_exception(exception: str):
-    try:
-        if 'sqlite3.IntegrityError' in str(exception):
-            logger.info(f'Exception : "Duplicate issue editing employee :"{str(exception)}')
-            return {
-                "DuplicateEmailError": "Employee Already Exist",
-            }
-        else:
-            logger.info(f'Exception : "Some issue editing employee :"{str(exception)}')
-            return ' There was an Error while editing'
-    except Exception as e:
-        logger.info(f'Exception : "Some issue editing employee :"{str(e)}')
-
 
 if __name__ == '__main__':
     try:
-        logger=setup_logger()
+        logger = setup_logger()
         app.run(host='127.0.0.1', port='3000', debug=False)
         logger.info('Flask App Started')
     except Exception as e:
