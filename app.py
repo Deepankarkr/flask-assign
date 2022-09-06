@@ -7,11 +7,12 @@ import datetime
 
 import pytz
 import re
-import logging
-from flask import Flask, render_template, request, redirect
+
+from flask import Flask, render_template, request, redirect ,jsonify
 from flask_sqlalchemy import SQLAlchemy
-from logging.handlers import RotatingFileHandler
+
 import configparser
+from helper import setup_logger
 
 secret_key = b'gslabflaskAssign@123'
 from auth import auth
@@ -27,10 +28,6 @@ db = SQLAlchemy(app)
 
 email_regex = config.get('constants', 'email_regex')
 
-log_files = config.get('constants', 'log_file_location') + str(
-    datetime.datetime.now().strftime("%d-%b-%Y %H-%M-%S")) + ".log"
-
-logger = logging.getLogger()
 
 
 class employees(db.Model):
@@ -48,11 +45,16 @@ class employees(db.Model):
 @auth.login_required
 def home_page():
     if request.method == 'GET':
+        import json
         emps = employees.query.all()
+        # In case you want the response in JSON
+        # cols = ['id','first_name', 'last_name', 'email']
+        # result = [{col: getattr(d, col) for col in cols} for d in emps]
+        # return(result)
         return render_template("home.html", emps=emps)
 
 
-@app.route('/add_employee',  methods=['POST', 'GET'])
+@app.route('/add_employee', methods=['POST', 'GET'])
 @auth.login_required
 def add_employee_page():
     if request.method == 'GET':
@@ -72,23 +74,18 @@ def add_employee_page():
                 db.session.flush()
                 logger.info(f'{a_email} user added')
                 return redirect('/')
-            except Exception as e:
+            except Exception as exception_msg:
                 db.session.rollback()
-                if 'sqlite3.IntegrityError' in str(e):
-                    logger.info(f'Exception : "Duplicate issue editing employee :"{str(e)}')
-                    return {
-                        "DuplicateEmailError": "Employee Already Exist",
-                    }
-                else:
-                    logger.info(f'Exception : "Some issue editing employee :"{str(e)}')
-                    return ' There was an Error while editing'
+                resp = duplicate_email_exception(str(exception_msg))
+                return resp
             finally:
                 db.session.commit()
+                db.engine.dispose()
 
 
 @app.route('/delete_employee/<int:id>')
 @auth.login_required
-def delete_employee_page(id):
+def delete_employee_page(id: int):
     emp_to_delete = employees.query.get_or_404(id)
     try:
         db.session.delete(emp_to_delete)
@@ -101,11 +98,12 @@ def delete_employee_page(id):
         return "there was a problem"
     finally:
         db.session.commit()
+        db.engine.dispose()
 
 
 @app.route('/edit_employee/<int:id>', methods=['POST', 'GET'])
 @auth.login_required
-def edit_employee_page(id):
+def edit_employee_page(id: int):
     if request.method == 'POST':
         try:
             a_first_name = request.form['firstname']
@@ -120,18 +118,13 @@ def edit_employee_page(id):
                     db.session.flush()
                     logger.info(f'Edited employee :" {str(a_email)}')
                     return redirect('/')
-                except Exception as e:
+                except Exception as exception_msg:
                     db.session.rollback()
-                    if ('sqlite3.IntegrityError' in str(e)):
-                        logger.info(f'Exception : "Duplicate issue editing employee :"{str(e)}')
-                        return {
-                            "DuplicateEmailError": "Employee Already Exist",
-                        }
-                    else:
-                        logger.info(f'Exception : "Some issue editing employee :"{str(e)}')
-                        return ' There was an Error while editing'
+                    resp = duplicate_email_exception(str(exception_msg))
+                    return resp
                 finally:
                     db.session.commit()
+                    db.engine.dispose()
             else:
                 return {
                     "EmailValidationError": "Please Provide a Valid Email Address",
@@ -149,15 +142,37 @@ def edit_employee_page(id):
                 "Error": "Issue fetching information for Exisiting Employee",
             }
 
+
+def duplicate_email_exception(exception: str):
+    try:
+        if 'sqlite3.IntegrityError' in str(exception):
+            logger.info(f'Exception : "Duplicate issue editing employee :"{str(exception)}')
+            return {
+                "DuplicateEmailError": "Employee Already Exist",
+            }
+        else:
+            logger.info(f'Exception : "Some issue editing employee :"{str(exception)}')
+            return ' There was an Error while editing'
+    except Exception as e:
+        logger.info(f'Exception : "Some issue editing employee :"{str(e)}')
+
+def duplicate_email_exception(exception: str):
+    try:
+        if 'sqlite3.IntegrityError' in str(exception):
+            logger.info(f'Exception : "Duplicate issue editing employee :"{str(exception)}')
+            return {
+                "DuplicateEmailError": "Employee Already Exist",
+            }
+        else:
+            logger.info(f'Exception : "Some issue editing employee :"{str(exception)}')
+            return ' There was an Error while editing'
+    except Exception as e:
+        logger.info(f'Exception : "Some issue editing employee :"{str(e)}')
+
+
 if __name__ == '__main__':
     try:
-        logformat = config.get('constants', 'log_format', raw=True)
-        datefmt = "%m-%d-%Y %H:%M"
-        logging.basicConfig(filename=log_files, level=logging.DEBUG, filemode="w", format=logformat, datefmt=datefmt)
-        handler = logging.StreamHandler(sys.stdout)
-        handler = RotatingFileHandler(log_files, mode='a', maxBytes=8 * 1024, encoding=None, delay=0)
-        handler.setLevel(logging.INFO)
-        logger.addHandler(handler)
+        logger=setup_logger()
         app.run(host='127.0.0.1', port='3000', debug=False)
         logger.info('Flask App Started')
     except Exception as e:
