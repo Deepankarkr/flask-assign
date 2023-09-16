@@ -13,7 +13,7 @@
 <div class="container-fluid bg-3 text-center">
     <nav class="navbar navbar-light" style="background-color: #a3b3b8;">
         <a class="navbar navbar-light"><h4>EMPLOYEES</h4></a>
-        <a href="employee/add_employee" class="btn btn-secondary btn-lg active" role="button" aria-pressed="true">ADD</a>
+        <a href="/employee/add_employee/" class="btn btn-secondary btn-lg active" role="button" aria-pressed="true">ADD</a>
     </nav>
 
     <table class="table table-sm">
@@ -33,10 +33,10 @@
             <td>{{i.last_name}}</td>
             <td>{{i.email}}</td>
             <td>
-                <a href="/employee/edit_employee/{{i.id}}" class="btn btn-info" role="button">Edit</a>
+                <a href="/employee/edit_employee/{{i.id}}/" class="btn btn-info" role="button">Edit</a>
             </td>
             <td>
-                <a href="/employee/delete_employee/{{i.id}}" class="btn btn-info" role="button">Delete</a>
+                <a href="/employee/delete_employee/{{i.id}}/" class="btn btn-info" role="button">Delete</a>
             </td>
         </tr>
         {% endfor %}

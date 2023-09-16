@@ -14,7 +14,7 @@ from flask_sqlalchemy import SQLAlchemy
 import configparser
 from helper import setup_logger
 
-secret_key = b'gslabflaskAssign@123'
+secret_key = b'flaskAssign@123'
 from auth import auth
 
 config = configparser.ConfigParser()
@@ -43,10 +43,10 @@ class Employees(db.Model):
 @app.route('/', methods=['GET'])
 @auth.login_required
 def index():
-    return redirect("/employee", code=302)
+    return redirect("/employee/", code=302)
 
 
-@app.route('/employee', methods=['GET'])
+@app.route('/employee/', methods=['GET'])
 @auth.login_required
 def home_page():
     if request.method == 'GET':
@@ -58,7 +58,7 @@ def home_page():
         return render_template("home.html", emps=emps)
 
 
-@app.route('/employee/add_employee', methods=['POST', 'GET'])
+@app.route('/employee/add_employee/', methods=['POST', 'GET'])
 @auth.login_required
 def add_employee_page():
     if request.method == 'GET':
@@ -87,7 +87,7 @@ def add_employee_page():
                 db.engine.dispose()
 
 
-@app.route('/employee/delete_employee/<int:id>')
+@app.route('/employee/delete_employee/<int:id>/')
 @auth.login_required
 def delete_employee_page(id: int):
     emp_to_delete = Employees.query.get_or_404(id)
@@ -105,7 +105,7 @@ def delete_employee_page(id: int):
         db.engine.dispose()
 
 
-@app.route('/employee/edit_employee/<int:id>', methods=['POST', 'GET'])
+@app.route('/employee/edit_employee/<int:id>/', methods=['POST', 'GET'])
 @auth.login_required
 def edit_employee_page(id: int):
     if request.method == 'POST':
@@ -164,7 +164,7 @@ def duplicate_email_exception(exception: str):
 if __name__ == '__main__':
     try:
         logger = setup_logger()
-        app.run(host='127.0.0.1', port='3000', debug=False)
+        app.run(host='127.0.0.1', port='3000', debug=True)
         logger.info('Flask App Started')
     except Exception as e:
         logger.info('Issue starting the Flask Application')
